@@ -8,7 +8,7 @@ pygame.init()
 window_width = 900
 window_height = 600
 window = pygame.display.set_mode((window_width, window_height))
-pygame.display.set_caption('Block breaker')
+pygame.display.set_caption('Atari Breakout')
 
 
 #define constant variables
@@ -28,17 +28,23 @@ silver = (192, 192, 192)
 speed = 40
 x1 = 350
 y1 = 570
+ballx = 450
+bally = 500
 xchange = 0
 clock = pygame.time.Clock()
 newLevel = True
 game_over = False
 score = 0
 length = 0
+blockx = 0
 layer1 = []
 layer2 = []
 layer3 = []
 layer4 = []
-blockx = 0
+layer1cumulative = []
+layer2cumulative = []
+layer3cumulative = []
+layer4cumulative = []
 
 
 #put text on the screen
@@ -48,30 +54,35 @@ def message(msg, color, msgx, msgy):
     window.blit(mesg, [msgx, msgy])
 
 #put layers of randomly lengthed blocks on the screen for each new level
-def levelBlocks(blockx):
-    while blockx < window_width:
-        length = round(random.randint(50, 200) / 10) * 10
-        layer1.append(length)
-        blockx += length + 5
+def popLevel(layer, layercumulative):
     blockx = 0
     while blockx < window_width:
+        
         length = round(random.randint(50, 200) / 10) * 10
-        layer2.append(length)
+        layer.append((length, True))
         blockx += length + 5
-    blockx = 0
-    while blockx < window_width:
-        length = round(random.randint(50, 200) / 10) * 10
-        layer3.append(length)
-        blockx += length + 5
-    blockx = 0
-    while blockx < window_width:
-        length = round(random.randint(50, 200) / 10) * 10
-        layer4.append(length)
-        blockx += length + 5
-    blockx = 0
+        layercumulative.append(blockx)
+
+def printLayer(layer, layercumulative):
+    print(layer)
+    print(layercumulative)
+
+def printLayers():
     print(layer1)
+    print(layer1cumulative)
     print(layer2)
+    print(layer2cumulative)
     print(layer3)
+    print(layer3cumulative)
+    print(layer4)
+    print(layer4cumulative)
+
+def levelBlocks():
+    popLevel(layer1, layer1cumulative)
+    popLevel(layer2, layer2cumulative)
+    popLevel(layer3, layer3cumulative)
+    popLevel(layer4, layer4cumulative)
+    printLayers()
 
 
 #to calculate angle to bounce off blocks at, calculate gradient (y2-y1/x2-x1) and then do negative gradient of it
@@ -89,6 +100,16 @@ while not game_over:
             elif event.key == pygame.K_DOWN:
                 xchange = 0
 
+            if event.key == pygame.K_w:
+                bally -= 10
+            elif event.key == pygame.K_s:
+                bally += 10
+            elif event.key == pygame.K_a:
+                ballx -= 10
+            elif event.key == pygame.K_d:
+                ballx += 10
+
+
     window.fill(black)
     x1 += xchange
 
@@ -99,26 +120,48 @@ while not game_over:
 
     if newLevel == True:
         newLevel = False
-        levelBlocks(blockx)
+        levelBlocks()
         blockx = 0
 
-    for xl1 in layer1:
-        pygame.draw.rect(window, (0, 0, 90), [blockx, 70, xl1, 70])
+    for xl1, status in layer1:                                          #maybe functionize this like popLevel() on line 57
+        if status == True:
+            pygame.draw.rect(window, (0, 0, 90), [blockx, 70, xl1, 70])
         blockx += xl1 + 5
     blockx = 0
-    for xl2 in layer2:
-        pygame.draw.rect(window, (0, 0, 145), [blockx, 145, xl2, 70])
+    for xl2, status in layer2:
+        if status == True:
+            pygame.draw.rect(window, (0, 0, 145), [blockx, 145, xl2, 70])
         blockx += xl2 + 5
+        
     blockx = 0
-    for xl3 in layer3:
-        pygame.draw.rect(window, (0, 0, 200), [blockx, 220, xl3, 70])
+    for xl3, status in layer3:
+        if status == True:
+            pygame.draw.rect(window, (0, 0, 200), [blockx, 220, xl3, 70])
         blockx += xl3 + 5
     blockx = 0
-    for xl4 in layer4:
-        pygame.draw.rect(window, blue, [blockx, 295, xl4, 70])
+    for xl4, status in layer4:
+        if status == True:
+            pygame.draw.rect(window, blue, [blockx, 295, xl4, 70])
         blockx += xl4 + 5
     blockx = 0
 
+
+    if bally - 10 <= 365 and bally - 10 >= 350:
+        number = 0
+        for item in layer4cumulative:
+            if number == 0:
+                if ballx < item:
+                    value, status = layer4[number]
+                    layer4[number] = (value, False)
+
+            else:
+                if ballx < item and ballx >= layer4cumulative[number-1]:
+                    value, status = layer4[number]
+                    layer4[number] = (value, False)
+            number += 1
+
+
+    pygame.draw.circle(window, orange, (ballx, bally), 10)
     pygame.draw.rect(window, yellow, [x1, y1, 200, 15])
     pygame.display.update()
     clock.tick(speed)
