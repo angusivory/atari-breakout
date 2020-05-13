@@ -28,9 +28,14 @@ silver = (192, 192, 192)
 speed = 40
 x1 = 350
 y1 = 570
+xchange = 0
+
 ballx = 450
 bally = 500
-xchange = 0
+ballxchange = random.randint(1, 10)
+ballychange = random.randint(-10, -1)
+balldirection = ""
+
 clock = pygame.time.Clock()
 newLevel = True
 game_over = False
@@ -46,6 +51,18 @@ layer2cumulative = []
 layer3cumulative = []
 layer4cumulative = []
 
+class Ball:
+    def __init__(self):
+        self.ballx = 450
+        self.bally = 500
+        self.ballxchange = random.randint(1, 10)
+        self.ballychange = random.randint(-10, -1)
+
+    def print(self):
+        print('In class method: ballx is {}'.format(self.ballx))
+
+def ball_print(ball):
+    print('Function Ball x {}, y {}'.format(ball.ballx, ball.bally))
 
 #put text on the screen
 font_style = pygame.font.SysFont(None, 50)
@@ -82,11 +99,24 @@ def levelBlocks():
     popLevel(layer2, layer2cumulative)
     popLevel(layer3, layer3cumulative)
     popLevel(layer4, layer4cumulative)
-    printLayers()
 
+def ifblockhit(layer, layercumulative):
+    number = 0
+    for item in layercumulative:
+        if number == 0:
+            if ballx < item:
+                value, status = layer[number]
+                layer[number] = (value, False)
 
-#to calculate angle to bounce off blocks at, calculate gradient (y2-y1/x2-x1) and then do negative gradient of it
+        else:
+            if ballx < item and ballx >= layercumulative[number-1]:
+                value, status = layer[number]
+                layer[number] = (value, False)
+        number += 1
 
+#my_ball = Ball()
+#ball_print(my_ball)
+#my_ball.print()
 
 while not game_over:
     for event in pygame.event.get():
@@ -146,19 +176,53 @@ while not game_over:
     blockx = 0
 
 
-    if bally - 10 <= 365 and bally - 10 >= 350:
-        number = 0
-        for item in layer4cumulative:
-            if number == 0:
-                if ballx < item:
-                    value, status = layer4[number]
-                    layer4[number] = (value, False)
+    #ball movement
+    ballx += ballxchange
+    bally += ballychange
 
-            else:
-                if ballx < item and ballx >= layer4cumulative[number-1]:
-                    value, status = layer4[number]
-                    layer4[number] = (value, False)
-            number += 1
+    if ballx <= 0 or ballx >= window_width-10:
+        ballxchange = -ballxchange
+    if bally <= 10:
+        ballychange = -ballychange
+    if bally >= 560:
+        if ballx >= x1 and ballx <= x1 + 200:
+            ballychange = -ballychange
+        else:
+            print("lost a life")
+
+    if ballychange > 0:
+        balldirection = "down"
+    else:
+        balldirection = "up"
+
+
+    #if ball has hit a block
+    if bally - 10 <= 365 and bally - 10 >= 350:
+        if balldirection == "up":
+            ifblockhit(layer4, layer4cumulative)
+        ballychange = -ballychange
+    elif bally - 10 <= 290 and bally - 10 >= 275:
+        if balldirection == "up":
+            ifblockhit(layer3, layer3cumulative)
+        else:
+            ifblockhit(layer4, layer4cumulative)
+        ballychange = -ballychange
+    elif bally - 10 <= 220 and bally - 10 >= 205:
+        if balldirection == "up":
+            ifblockhit(layer2, layer2cumulative)
+        else:
+            ifblockhit(layer3, layer3cumulative)
+        ballychange = -ballychange
+    elif bally - 10 <= 145 and bally - 10 >= 130:
+        if balldirection == "up":
+            ifblockhit(layer1, layer1cumulative)
+        else:
+            ifblockhit(layer2, layer2cumulative)
+        ballychange = -ballychange
+    elif bally - 10 <= 70 and bally - 10 >= 55:
+        if balldirection == "down":
+            ifblockhit(layer1, layer1cumulative)
+        ballychange = -ballychange
 
 
     pygame.draw.circle(window, orange, (ballx, bally), 10)
