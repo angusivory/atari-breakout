@@ -24,13 +24,18 @@ white = (255, 255, 255)
 black = (0,0,0)
 gold = (255, 223, 0)    #212, 175, 55
 silver = (192, 192, 192)
-
+blues = [(0,0,90), (0,0,145), (0,0,200), (0,0,255)]
 speed = 40
 x1 = 350
 y1 = 570
+xchange = 0
+
 ballx = 450
 bally = 500
-xchange = 0
+ballxchange = random.randint(1, 10)
+ballychange = random.randint(-10, -1)
+balldirection = ""
+
 clock = pygame.time.Clock()
 newLevel = True
 game_over = False
@@ -46,6 +51,18 @@ layer2cumulative = []
 layer3cumulative = []
 layer4cumulative = []
 
+class Ball:
+    def __init__(self):
+        self.ballx = 450
+        self.bally = 500
+        self.ballxchange = random.randint(1, 10)
+        self.ballychange = random.randint(-10, -1)
+
+    def print(self):
+        print('In class method: ballx is {}'.format(self.ballx))
+
+def ball_print(ball):
+    print('Function Ball x {}, y {}'.format(ball.ballx, ball.bally))
 
 #put text on the screen
 font_style = pygame.font.SysFont(None, 50)
@@ -82,11 +99,24 @@ def levelBlocks():
     popLevel(layer2, layer2cumulative)
     popLevel(layer3, layer3cumulative)
     popLevel(layer4, layer4cumulative)
-    printLayers()
+billy = ""
+def ifblockhit(layer, layercumulative, ballychange):
+    number = 0
+    for item in layercumulative:
+        if number == 0:
+            if ballx < item:
+                value, status = layer[number]
+                layer[number] = (value, False)
 
+        else:
+            if ballx < item and ballx >= layercumulative[number-1]:
+                value, status = layer[number]
+                layer[number] = (value, False)
+        number += 1
 
-#to calculate angle to bounce off blocks at, calculate gradient (y2-y1/x2-x1) and then do negative gradient of it
-
+#my_ball = Ball()
+#ball_print(my_ball)
+#my_ball.print()
 
 while not game_over:
     for event in pygame.event.get():
@@ -146,19 +176,124 @@ while not game_over:
     blockx = 0
 
 
-    if bally - 10 <= 365 and bally - 10 >= 350:
-        number = 0
-        for item in layer4cumulative:
-            if number == 0:
-                if ballx < item:
-                    value, status = layer4[number]
-                    layer4[number] = (value, False)
+    #ball movement
+    ballx += ballxchange
+    bally += ballychange
 
+    if ballx <= 10 or ballx >= window_width-10:
+        ballxchange = -ballxchange
+    if bally <= 10:
+        ballychange = -ballychange
+    if bally >= 560:
+        if ballx >= x1 and ballx <= x1 + 200:
+            ballychange = -ballychange
+        else:
+            print("lost a life")
+
+    #cheat function (for testing)
+    if 3 == 1:
+        print("jeff")
+
+
+
+    if ballychange > 0:
+        balldirection = "down"
+    else:
+        balldirection = "up"
+
+
+    #if ball has hit a block
+    if (bally - 10 <= 365 and bally - 10 >= 350):
+        if window.get_at((ballx, bally - 10)) in blues:
+            if balldirection == "up":
+                ifblockhit(layer4, layer4cumulative, ballychange)
+            ballychange = -ballychange
+    elif bally - 10 <= 290 and bally - 10 >= 275:
+        if window.get_at((ballx, bally - 10)) in blues or window.get_at((ballx, bally + 10)) in blues:
+            if balldirection == "up":
+                ifblockhit(layer3, layer3cumulative, ballychange)
             else:
-                if ballx < item and ballx >= layer4cumulative[number-1]:
-                    value, status = layer4[number]
-                    layer4[number] = (value, False)
-            number += 1
+                ifblockhit(layer4, layer4cumulative, ballychange)
+            ballychange = -ballychange
+    elif bally - 10 <= 220 and bally - 10 >= 205:
+        if window.get_at((ballx, bally - 10)) in blues or window.get_at((ballx, bally + 10)) in blues:
+            if balldirection == "up":
+                ifblockhit(layer2, layer2cumulative, ballychange)
+            else:
+                ifblockhit(layer3, layer3cumulative, ballychange)
+            ballychange = -ballychange
+    elif bally - 10 <= 145 and bally - 10 >= 130:
+        if window.get_at((ballx, bally - 10)) in blues or window.get_at((ballx, bally + 10)) in blues:
+            if balldirection == "up":
+                ifblockhit(layer1, layer1cumulative, ballychange)
+            else:
+                ifblockhit(layer2, layer2cumulative, ballychange)
+            ballychange = -ballychange
+    elif bally - 10 <= 70 and bally - 10 >= 55:
+        if window.get_at((ballx, bally + 10)) in blues:
+            if balldirection == "down":
+                ifblockhit(layer1, layer1cumulative, ballychange)
+            ballychange = -ballychange
+
+    #if (ballxchange > 0 and ((round(ballx/10)*10) + 10 in layer4cumulative or (round(ballx/10)*10) + 5 in layer4cumulative) and bally >= 295 and bally <= 365) or (ballxchange < 0 and ((round(ballx/10)*10) - 10 in layer4cumulative or (round(ballx/10)*10) - 5 in layer4cumulative) and bally >= 295 and bally <= 365) :
+    #    print(ballx)
+    #    print(layer4cumulative)
+
+    if bally >= 295 and bally <= 365:
+        for x in range(0, len(layer4cumulative)):
+            if layer4cumulative[x] - 5 <= ballx <= layer4cumulative[x] + 5:
+                if ballxchange < 0:
+                    value, status = layer4[x]
+                    if status == True:
+                        layer4[x] = (value, False)
+                        ballxchange = -ballxchange
+                else:
+                    value, status = layer4[x+1]
+                    if status == True:
+                        layer4[x+1] = (value, False)
+                        ballxchange = -ballxchange
+
+    elif bally >= 220 and bally <= 290:
+        for x in range(0, len(layer3cumulative)):
+            if layer3cumulative[x] - 5 <= ballx <= layer3cumulative[x] + 5:
+                if ballxchange < 0:
+                    value, status = layer3[x]
+                    if status == True:
+                        layer3[x] = (value, False)
+                        ballxchange = -ballxchange
+                else:
+                    value, status = layer3[x+1]
+                    if status == True:
+                        layer3[x+1] = (value, False)
+                        ballxchange = -ballxchange
+
+    elif bally >= 145 and bally <= 215:
+        for x in range(0, len(layer2cumulative)):
+            if layer2cumulative[x] - 5 <= ballx <= layer2cumulative[x] + 5:
+                if ballxchange < 0:
+                    value, status = layer2[x]
+                    if status == True:
+                        layer2[x] = (value, False)
+                        ballxchange = -ballxchange
+                else:
+                    value, status = layer2[x+1]
+                    if status == True:
+                        layer2[x+1] = (value, False)
+                        ballxchange = -ballxchange
+    elif bally >= 70 and bally <= 140:
+        for x in range(0, len(layer1cumulative)):
+            if layer1cumulative[x] - 5 <= ballx <= layer1cumulative[x] + 5:
+                if ballxchange < 0:
+                    value, status = layer1[x]
+                    if status == True:
+                        layer1[x] = (value, False)
+                        ballxchange = -ballxchange
+                else:
+                    value, status = layer1[x+1]
+                    if status == True:
+                        layer1[x+1] = (value, False)
+                        ballxchange = -ballxchange
+
 
 
     pygame.draw.circle(window, orange, (ballx, bally), 10)
