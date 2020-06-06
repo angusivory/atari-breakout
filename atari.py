@@ -240,7 +240,8 @@ while not game_over:
         ballxchange = -ballxchange
     if bally <= 10:
         ballychange = -ballychange
-    #cheat function -   REMOVE AFTER TESTING
+    
+    #lose a life
     if bally >= window_height + 20:
         print("lost a life")
         time.sleep(1)
