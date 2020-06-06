@@ -2,6 +2,7 @@
 import time
 import random
 import pygame
+import math
 pygame.init()
 
 #set up window
@@ -30,10 +31,14 @@ x1 = 350
 y1 = 570
 xchange = 0
 
+#set up ball
 ballx = 450
 bally = 500
-ballxchange = random.randint(1, 10)
-ballychange = random.randint(-10, -1)
+ballxchanges = [3,4,5,6,7,8,9,9,10]
+ballychanges = [10,9,9,8,7,6,5,4,3]
+num = random.randint(0, len(ballxchanges) -1)
+ballxchange = ballxchanges[num]
+ballychange = ballychanges[num]
 balldirection = ""
 
 clock = pygame.time.Clock()
@@ -99,7 +104,7 @@ def levelBlocks():
     popLevel(layer2, layer2cumulative)
     popLevel(layer3, layer3cumulative)
     popLevel(layer4, layer4cumulative)
-billy = ""
+
 def ifblockhit(layer, layercumulative, ballychange):
     number = 0
     for item in layercumulative:
@@ -114,34 +119,21 @@ def ifblockhit(layer, layercumulative, ballychange):
                 layer[number] = (value, False)
         number += 1
 
-#my_ball = Ball()
-#ball_print(my_ball)
-#my_ball.print()
 
 while not game_over:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             game_over = True
         if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_LEFT:
-                xchange = -10
-            elif event.key == pygame.K_RIGHT:
-                xchange = 10
-            elif event.key == pygame.K_DOWN:
-                xchange = 0
+            if event.key == pygame.K_SPACE:
+                print("space")
 
-            if event.key == pygame.K_w:
-                bally -= 10
-            elif event.key == pygame.K_s:
-                bally += 10
-            elif event.key == pygame.K_a:
-                ballx -= 10
-            elif event.key == pygame.K_d:
-                ballx += 10
 
 
     window.fill(black)
-    x1 += xchange
+
+    mouse = pygame.mouse.get_pos()
+    x1 = mouse[0] - 100
 
     if x1 <= 0:
         x1 = 0
@@ -180,20 +172,83 @@ while not game_over:
     ballx += ballxchange
     bally += ballychange
 
+    if bally >= 560 and balldirection == "down":
+        if ballx >= x1 and ballx <= x1 + 200:
+            xdiff = ballx - x1
+            xdiff = int(xdiff/20)
+            if ballxchange < 0:     #if ball direction is left
+                if xdiff == 10:
+                    ballychange = random.randint(-2,-1)
+                    ballxchange = 10
+                elif xdiff == 9:
+                    ballychange = -4
+                    ballxchange = 10
+                elif xdiff == 8:
+                    ballychange = -5
+                    ballxchange = random.randint(8,9)
+                elif xdiff == 7:
+                    ballychange = -6
+                    ballxchange = random.randint(7,9)
+                elif xdiff == 6:
+                    ballychange = -7
+                    ballxchange = random.randint(6,8)
+                elif xdiff == 5:
+                    ballychange = -9
+                    ballxchange = random.randint(-5,-3)
+                elif xdiff == 4:
+                    ballychange = -7
+                    ballxchange = random.randint(-8,-6)
+                elif xdiff == 3:
+                    ballychange = -6
+                    ballxchange = random.randint(-9,-7)
+                else:
+                    ballychange = -4
+                    ballxchange = -9
+                #ballxchange = xdiff - 1
+                #ballychange = -(int(math.sqrt(10**2 - xdiff**2)))
+
+            elif ballxchange > 0:   #if ball direction is right
+                if xdiff == 1:
+                    ballychange = random.randint(-2,-1)
+                    ballxchange = -10
+                elif xdiff == 2:
+                    ballychange = -4
+                    ballxchange = -10
+                elif xdiff == 3:
+                    ballychange = -5
+                    ballxchange = random.randint(-9,-8)
+                elif xdiff == 4:
+                    ballychange = -6
+                    ballxchange = random.randint(-9,-8)
+                elif xdiff == 5:
+                    ballychange = -7
+                    ballchange = random.randint(-8,-6)
+                elif xdiff == 6:
+                    ballychange = -9
+                    ballxchange = random.randint(3,5)
+                elif xdiff == 7:
+                    ballychange = -7
+                    ballxchange = random.randint(6,8)
+                elif xdiff == 8:
+                    ballychange = -6
+                    ballxchange = random.randint(7,9)
+                else:
+                    ballychange = -4
+                    ballxchange = 9
+
     if ballx <= 10 or ballx >= window_width-10:
         ballxchange = -ballxchange
     if bally <= 10:
         ballychange = -ballychange
-    if bally >= 560:
-        if ballx >= x1 and ballx <= x1 + 200:
-            ballychange = -ballychange
-        else:
-            print("lost a life")
-
-    #cheat function (for testing)
-    if 3 == 1:
-        print("jeff")
-
+    #cheat function -   REMOVE AFTER TESTING
+    if bally >= window_height + 20:
+        print("lost a life")
+        time.sleep(1)
+        ballx = 450
+        bally = 500
+        num = random.randint(0, len(ballxchanges) -1)
+        ballxchange = -ballxchanges[num]
+        ballychange = -ballychanges[num]
 
 
     if ballychange > 0:
@@ -235,9 +290,6 @@ while not game_over:
                 ifblockhit(layer1, layer1cumulative, ballychange)
             ballychange = -ballychange
 
-    #if (ballxchange > 0 and ((round(ballx/10)*10) + 10 in layer4cumulative or (round(ballx/10)*10) + 5 in layer4cumulative) and bally >= 295 and bally <= 365) or (ballxchange < 0 and ((round(ballx/10)*10) - 10 in layer4cumulative or (round(ballx/10)*10) - 5 in layer4cumulative) and bally >= 295 and bally <= 365) :
-    #    print(ballx)
-    #    print(layer4cumulative)
 
     if bally >= 295 and bally <= 365:
         for x in range(0, len(layer4cumulative)):
