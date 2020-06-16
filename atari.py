@@ -31,7 +31,7 @@ oranges = [(90,58,0), (145,93,0), (200,129,0), (255,165,0)]
 greens = [(0,90,0), (0,145,0), (0,200,0), (0,255,0)]
 golds = [(90,78,0), (145,126,0), (200,174,0), (255,223,0)]
 greys = [(90,90,90), (145,145,145), (200,200,200), (255,255,255)]
-levelColours = ["", blues, reds, oranges, greens, golds, greys]
+levelColours = [blues, reds, oranges, greens, golds, greys]
 speed = 40
 x1 = 350
 y1 = 570
@@ -77,12 +77,60 @@ def message(msg, color, msgx, msgy):
 #put layers of randomly lengthed blocks on the screen for each new level
 def popLevel(layer, layercumulative):
     blockx = 0
-    while blockx < window_width:
+    while blockx < window_width - 210:
         
-        length = round(random.randint(50, 200) / 10) * 10
+        length = round(random.randint(50, 180) / 10) * 10
         layer.append((length, True))
         blockx += length + 5
         layercumulative.append(blockx)
+
+    #inneficient, but the only way (that i can think of currently): this is so that there are no 10-pixel blocks as the ball isn't able to hit them, 10px is not wide enough.
+    blockwindowdiff = window_width - blockx
+    if blockwindowdiff <= 40:
+        layer.append((50, True))
+        blockx += length + 5
+        layercumulative.append(blockx)
+    elif 40 < blockwindowdiff <= 100:
+        layer.append((int(blockwindowdiff/2-10), True))
+        blockx += int(blockwindowdiff/2-5)
+        layercumulative.append(blockx)
+        layer.append((int(blockwindowdiff/2+10), True))
+        blockx += int(blockwindowdiff/2+5)
+        layercumulative.append(blockx)
+    elif 100 < blockwindowdiff <= 150:
+        if random.randint(1,2) == 1:
+            layer.append((blockwindowdiff, True))
+            blockx += blockwindowdiff+5
+            layercumulative.append(blockx)
+        else:
+            layer.append((int(blockwindowdiff/2-10), True))
+            blockx += int(blockwindowdiff/2-5)
+            layercumulative.append(blockx)
+            layer.append((int(blockwindowdiff/2+10), True))
+            blockx += int(blockwindowdiff/2+15)
+            layercumulative.append(blockx)
+    else:
+        if random.randint(1,2) == 1:
+            layer.append((int(blockwindowdiff/2-10), True))
+            blockx += int(blockwindowdiff/2-5)
+            layercumulative.append(blockx)
+            layer.append((int(blockwindowdiff/2+10), True))
+            blockx += int(blockwindowdiff/2+15)
+            layercumulative.append(blockx)
+        else:
+            layer.append((int(blockwindowdiff/3-10), True))
+            blockx += int(blockwindowdiff/3-5)
+            layercumulative.append(blockx)
+            layer.append((int(blockwindowdiff/3+10), True))
+            blockx += int(blockwindowdiff/3+15)
+            layercumulative.append(blockx)
+            layer.append((int(blockwindowdiff/3+10), True))
+            blockx += int(blockwindowdiff/3+15)
+            layercumulative.append(blockx)
+
+
+
+
 
 
 def drawBlocks(blockx, colourlist, l1, l2, l3, l4):
@@ -156,8 +204,9 @@ def setUpLevel(level, l1, l2, l3, l4, l1c, l2c, l3c, l4c):
     popLevel(l2, l2c)
     popLevel(l3, l3c)
     popLevel(l4, l4c)
+    window.fill(black)
     #print("During level set up, layer1 =", l1)
-    drawBlocks(blockx, levelColours[level], l1, l2, l3, l4)
+    drawBlocks(blockx, levelColours[(level - 1)%len(levelColours)], l1, l2, l3, l4)
     #print("drawn blocks")
     message("Level {}".format(level), white, 420, 10)
     pygame.display.update()
@@ -175,6 +224,8 @@ while not game_over:
             if event.key == pygame.K_SPACE:
                 newLevel = True
                 level += 1
+            if event.key == pygame.K_c:
+                newLevel = True
 
 
 
@@ -188,10 +239,9 @@ while not game_over:
     elif x1 >= window_width - 200:
         x1 = window_width - 200
 
-    drawBlocks(blockx, levelColours[level], layer1, layer2, layer3, layer4)
+    drawBlocks(blockx, levelColours[(level - 1)%len(levelColours)], layer1, layer2, layer3, layer4)
 
     if newLevel == True:
-        #print("setting up level")
         layer1, layer2, layer3, layer4, layer1cumulative, layer2cumulative, layer3cumulative, layer4cumulative = setUpLevel(level, layer1, layer2, layer3, layer4, layer1cumulative, layer2cumulative, layer3cumulative, layer4cumulative)
         blockx = 0
         newLevel = False
@@ -202,7 +252,6 @@ while not game_over:
         num = random.randint(0, len(ballxchanges) -1)
         ballxchange = -ballxchanges[num]
         ballychange = -ballychanges[num]
-        #print("after level has been set up and blocks drawn, layer 1 =", layer1)
 
 
 
@@ -308,13 +357,13 @@ while not game_over:
 
     #if ball has hit a block
     if bally - 10 <= 365 and bally - 10 >= 350:
-        if window.get_at((ballx, bally - 10)) in levelColours[level]:
+        if window.get_at((ballx, bally - 10)) in levelColours[(level - 1)%len(levelColours)]:
             if balldirection == "up":
                 score = ifblockhit(layer4, layer4cumulative, ballychange, score)
             ballychange = -ballychange
             numberOfBlocksThatAreFalse += 1
     elif bally - 10 <= 290 and bally - 10 >= 275:
-        if window.get_at((ballx, bally - 10)) in levelColours[level] or window.get_at((ballx, bally + 10)) in levelColours[level]:
+        if window.get_at((ballx, bally - 10)) in levelColours[(level - 1)%len(levelColours)] or window.get_at((ballx, bally + 10)) in levelColours[(level - 1)%len(levelColours)]:
             if balldirection == "up":
                 score = ifblockhit(layer3, layer3cumulative, ballychange, score)
             else:
@@ -322,7 +371,7 @@ while not game_over:
             ballychange = -ballychange
             numberOfBlocksThatAreFalse += 1
     elif bally - 10 <= 220 and bally - 10 >= 205:
-        if window.get_at((ballx, bally - 10)) in levelColours[level] or window.get_at((ballx, bally + 10)) in levelColours[level]:
+        if window.get_at((ballx, bally - 10)) in levelColours[(level - 1)%len(levelColours)] or window.get_at((ballx, bally + 10)) in levelColours[(level - 1)%len(levelColours)]:
             if balldirection == "up":
                 score = ifblockhit(layer2, layer2cumulative, ballychange, score)
             else:
@@ -330,7 +379,7 @@ while not game_over:
             ballychange = -ballychange
             numberOfBlocksThatAreFalse += 1
     elif bally - 10 <= 145 and bally - 10 >= 130:
-        if window.get_at((ballx, bally - 10)) in levelColours[level] or window.get_at((ballx, bally + 10)) in levelColours[level]:
+        if window.get_at((ballx, bally - 10)) in levelColours[(level - 1)%len(levelColours)] or window.get_at((ballx, bally + 10)) in levelColours[(level - 1)%len(levelColours)]:
             if balldirection == "up":
                 score = ifblockhit(layer1, layer1cumulative, ballychange, score)
             else:
@@ -338,7 +387,7 @@ while not game_over:
             ballychange = -ballychange
             numberOfBlocksThatAreFalse += 1
     elif bally - 10 <= 70 and bally - 10 >= 55:
-        if window.get_at((ballx, bally + 10)) in levelColours[level]:
+        if window.get_at((ballx, bally + 10)) in levelColours[(level - 1)%len(levelColours)]:
             if balldirection == "down":
                 score = ifblockhit(layer1, layer1cumulative, ballychange, score)
             ballychange = -ballychange
@@ -428,7 +477,6 @@ while not game_over:
     #check if new level is required
     if numberOfBlocksThatAreFalse == len(layer1) + len(layer2) + len(layer3) + len(layer4):
         newLevel = True
-        window.fill(black)
         level += 1
 
     message(str(score), white, 0, 0)
