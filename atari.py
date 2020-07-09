@@ -38,14 +38,23 @@ y1 = 570
 xchange = 0
 
 #set up ball
-ballx = 450
-bally = 500
+class Ball():
+
+    def __init__(self, ballx, bally, balldirection, ballxchange, ballychange):
+        self.ballx = ballx
+        self.bally = bally
+        self.ballxchange = ballxchange
+        self.ballychange = ballychange
+        self.balldirection = balldirection
+
+    def __str__(self):
+        return f"The ball is located at ({self.ballx},{self.bally}), direction: {self.balldirection}."
+
 ballxchanges = [3,4,5,6,7,8,9,9,10]
 ballychanges = [10,9,9,8,7,6,5,4,3]
-num = random.randint(0, len(ballxchanges) -1)
-ballxchange = ballxchanges[num]
-ballychange = -ballychanges[num]
-balldirection = ""
+num = random.randint(0, len(ballxchanges) - 1)
+atariBall = Ball(450, 500, "", ballxchanges[num], ballychanges[num])
+
 
 clock = pygame.time.Clock()
 newLevel = True
@@ -54,18 +63,60 @@ score = 0
 bounces = 0
 lives = 3
 level = 1
-length = 0
-blockx = 0
-layer1 = []
-layer2 = []
-layer3 = []
-layer4 = []
-layer1cumulative = []
-layer2cumulative = []
-layer3cumulative = []
-layer4cumulative = []
-layers = [(layer1, layer1cumulative), (layer2, layer2cumulative), (layer3, layer3cumulative), (layer4, layer4cumulative)]
+#layers = [(layer1, layer1cumulative), (layer2, layer2cumulative), (layer3, layer3cumulative), (layer4, layer4cumulative)]
 numberOfBlocksThatAreFalse = 0
+
+class Wall():
+    def __init__(self, layer1, layer2, layer3, layer4, layer1cumulative, layer2cumulative, layer3cumulative, layer4cumulative, blockx, length):
+        self.layer1 = layer1
+        self.layer2 = layer2
+        self.layer3 = layer3
+        self.layer4 = layer4
+        self.layer1cumulative = layer1cumulative
+        self.layer2cumulative = layer2cumulative
+        self.layer3cumulative = layer3cumulative
+        self.layer4cumulative = layer4cumulative
+        self.blockx = blockx
+        self.length = length
+
+    def __str__(self):
+        return f"layer1: {self.layer1}, layer2: {self.layer2}, layer3: {self.layer3}, layer4: {self.layer4}"
+
+    def clearLayers(self):
+        self.layer1 = []
+        self.layer2 = []
+        self.layer3 = []
+        self.layer4 = []
+        self.layer1cumulative = []
+        self.layer2cumulative = []
+        self.layer3cumulative = []
+        self.layer4cumulative = []
+
+    def drawBlocks(self, theWall, colourlist):
+        for xl1, status in theWall.layer1:
+            if status == True:
+                pygame.draw.rect(window, colourlist[0], [theWall.blockx, 70, xl1, 70])
+            theWall.blockx += xl1 + 5
+        theWall.blockx = 0
+        for xl2, status in theWall.layer2:
+            if status == True:
+                pygame.draw.rect(window, colourlist[1], [theWall.blockx, 145, xl2, 70])
+            theWall.blockx += xl2 + 5
+            
+        theWall.blockx = 0
+        for xl3, status in theWall.layer3:
+            if status == True:
+                pygame.draw.rect(window, colourlist[2], [theWall.blockx, 220, xl3, 70])
+            theWall.blockx += xl3 + 5
+        theWall.blockx = 0
+        for xl4, status in theWall.layer4:
+            if status == True:
+                pygame.draw.rect(window, colourlist[3], [theWall.blockx, 295, xl4, 70])
+            theWall.blockx += xl4 + 5
+        theWall.blockx = 0
+
+theWall = Wall([], [], [], [], [], [], [], [], 0, 0, )
+
 
 
 #put text on the screen
@@ -133,56 +184,35 @@ def popLevel(layer, layercumulative):
 
 
 
-def drawBlocks(blockx, colourlist, l1, l2, l3, l4):
-    for xl1, status in l1:
-        if status == True:
-            pygame.draw.rect(window, colourlist[0], [blockx, 70, xl1, 70])
-        blockx += xl1 + 5
-    blockx = 0
-    for xl2, status in l2:
-        if status == True:
-            pygame.draw.rect(window, colourlist[1], [blockx, 145, xl2, 70])
-        blockx += xl2 + 5
-        
-    blockx = 0
-    for xl3, status in l3:
-        if status == True:
-            pygame.draw.rect(window, colourlist[2], [blockx, 220, xl3, 70])
-        blockx += xl3 + 5
-    blockx = 0
-    for xl4, status in l4:
-        if status == True:
-            pygame.draw.rect(window, colourlist[3], [blockx, 295, xl4, 70])
-        blockx += xl4 + 5
-    blockx = 0
 
-def ifblockhit(layer, layercumulative, ballychange, score):
+
+def ifblockhit(layer, layercumulative, ball, score, theWall):
     number = 0
     for item in layercumulative:
         if number == 0:
-            if ballx < item:
+            if atariBall.ballx < item:
                 value, status = layer[number]
                 layer[number] = (value, False)
                 score += bounces
-                if layer == layer4:
+                if layer == theWall.layer4:
                     score += 1
-                elif layer == layer3:
+                elif layer == theWall.layer3:
                     score += 2
-                elif layer == layer2:
+                elif layer == theWall.layer2:
                     score += 3
                 else:
                     score += 4
 
         else:
-            if ballx < item and ballx >= layercumulative[number-1]:
+            if atariBall.ballx < item and atariBall.ballx >= layercumulative[number-1]:
                 value, status = layer[number]
                 layer[number] = (value, False)
                 score += bounces
-                if layer == layer4:
+                if layer == theWall.layer4:
                     score += 1
-                elif layer == layer3:
+                elif layer == theWall.layer3:
                     score += 2
-                elif layer == layer2:
+                elif layer == theWall.layer2:
                     score += 3
                 else:
                     score += 4
@@ -190,28 +220,21 @@ def ifblockhit(layer, layercumulative, ballychange, score):
     #print(numberOfBlocksThatAreFalse)
     return score
 
-def setUpLevel(level, l1, l2, l3, l4, l1c, l2c, l3c, l4c):
-    l1 = []
-    l2 = []
-    l3 = []
-    l4 = []
-    l1c = []
-    l2c = []
-    l3c = []
-    l4c = []
+def setUpLevel(level, theWall):
+    theWall.clearLayers()
     
-    popLevel(l1, l1c)
-    popLevel(l2, l2c)
-    popLevel(l3, l3c)
-    popLevel(l4, l4c)
+    popLevel(theWall.layer1, theWall.layer1cumulative)
+    popLevel(theWall.layer2, theWall.layer2cumulative)
+    popLevel(theWall.layer3, theWall.layer3cumulative)
+    popLevel(theWall.layer4, theWall.layer4cumulative)
     window.fill(black)
     #print("During level set up, layer1 =", l1)
-    drawBlocks(blockx, levelColours[(level - 1)%len(levelColours)], l1, l2, l3, l4)
+    theWall.drawBlocks(theWall, levelColours[(level - 1)%len(levelColours)])
     #print("drawn blocks")
     message("Level {}".format(level), white, 420, 10)
     pygame.display.update()
     time.sleep(1)
-    return l1, l2, l3, l4, l1c, l2c, l3c, l4c
+    return theWall
 
 
 
@@ -230,6 +253,7 @@ while not game_over:
 
 
     window.fill(black)
+    ballhitblockquestionmark = False
     
     mouse = pygame.mouse.get_pos()
     x1 = mouse[0] - 100
@@ -239,40 +263,40 @@ while not game_over:
     elif x1 >= window_width - 200:
         x1 = window_width - 200
 
-    drawBlocks(blockx, levelColours[(level - 1)%len(levelColours)], layer1, layer2, layer3, layer4)
+    theWall.drawBlocks(theWall, levelColours[(level - 1)%len(levelColours)])
 
     if newLevel == True:
-        layer1, layer2, layer3, layer4, layer1cumulative, layer2cumulative, layer3cumulative, layer4cumulative = setUpLevel(level, layer1, layer2, layer3, layer4, layer1cumulative, layer2cumulative, layer3cumulative, layer4cumulative)
-        blockx = 0
+        theWall = setUpLevel(level, theWall)
+        theWall.blockx = 0
         newLevel = False
         numberOfBlocksThatAreFalse = 0
         lives = 3
-        ballx = 450
-        bally = 500
+        atariBall.ballx = 450
+        atariBall.bally = 500
         num = random.randint(0, len(ballxchanges) -1)
-        ballxchange = -ballxchanges[num]
-        ballychange = -ballychanges[num]
+        atariBall.ballxchange = -ballxchanges[num]
+        atariBall.ballychange = -ballychanges[num]
 
 
 
     #ball movement
-    ballx += ballxchange
-    bally += ballychange
+    atariBall.ballx += atariBall.ballxchange
+    atariBall.bally += atariBall.ballychange
 
-    if ballx <= 10 or ballx >= window_width-10:
-        ballxchange = -ballxchange
-    if bally <= 10:
-        ballychange = -ballychange
+    if atariBall.ballx <= 10 or atariBall.ballx >= window_width-10:
+        atariBall.ballxchange = -atariBall.ballxchange
+    if atariBall.bally <= 10:
+        atariBall.ballychange = -atariBall.ballychange
     
     #lose a life
-    if bally >= window_height + 20:
+    if atariBall.bally >= window_height + 20:
         print("lost a life")
         time.sleep(1)
-        ballx = 450
-        bally = 500
+        atariBall.ballx = 450
+        atariBall.bally = 500
         num = random.randint(0, len(ballxchanges) -1)
-        ballxchange = -ballxchanges[num]
-        ballychange = -ballychanges[num]
+        atariBall.ballxchange = -ballxchanges[num]
+        atariBall.ballychange = -ballychanges[num]
         lives -= 1
         if lives == 0:
             window.fill(black)
@@ -283,199 +307,205 @@ while not game_over:
             game_over = True
 
 
-    if ballychange > 0:
-        balldirection = "down"
+    if atariBall.ballychange > 0:
+       atariBall. balldirection = "down"
     else:
-        balldirection = "up"
+        atariBall.balldirection = "up"
 
 
-    if 560 <= bally <= 570 and balldirection == "down":
+    if 560 <= atariBall.bally <= 570 and atariBall.balldirection == "down":
         bounces = 0
-        if ballx >= x1 and ballx <= x1 + 200:
-            xdiff = ballx - x1
+        if atariBall.ballx >= x1 and atariBall.ballx <= x1 + 200:
+            xdiff = atariBall.ballx - x1
             xdiff = int(xdiff/20)
-            if ballxchange < 0:     #if ball direction is left
+            if atariBall.ballxchange < 0:     #if ball direction is left
                 if xdiff == 10:
-                    ballychange = random.randint(-2,-1)
-                    ballxchange = 10
+                    atariBall.ballychange = random.randint(-2,-1)
+                    atariBall.ballxchange = 10
                 elif xdiff == 9:
-                    ballychange = -4
-                    ballxchange = 10
+                    atariBall.ballychange = -4
+                    atariBall.ballxchange = 10
                 elif xdiff == 8:
-                    ballychange = -5
-                    ballxchange = random.randint(8,9)
+                    atariBall.ballychange = -5
+                    atariBall.ballxchange = random.randint(8,9)
                 elif xdiff == 7:
-                    ballychange = -6
-                    ballxchange = random.randint(7,9)
+                    atariBall.ballychange = -6
+                    atariBall.ballxchange = random.randint(7,9)
                 elif xdiff == 6:
-                    ballychange = -7
-                    ballxchange = random.randint(6,8)
+                    atariBall.ballychange = -7
+                    atariBall.ballxchange = random.randint(6,8)
                 elif xdiff == 5:
-                    ballychange = -9
-                    ballxchange = random.randint(-5,-3)
+                    atariBall.ballychange = -9
+                    atariBall.ballxchange = random.randint(-5,-3)
                 elif xdiff == 4:
-                    ballychange = -7
-                    ballxchange = random.randint(-8,-6)
+                    atariBall.ballychange = -7
+                    atariBall.ballxchange = random.randint(-8,-6)
                 elif xdiff == 3:
-                    ballychange = -6
-                    ballxchange = random.randint(-9,-7)
+                    atariBall.ballychange = -6
+                    atariBall.ballxchange = random.randint(-9,-7)
                 else:
-                    ballychange = -4
-                    ballxchange = -9
+                    atariBall.ballychange = -4
+                    atariBall.ballxchange = -9
                 #ballxchange = xdiff - 1
                 #ballychange = -(int(math.sqrt(10**2 - xdiff**2)))
 
-            elif ballxchange > 0:   #if ball direction is right
+            elif atariBall.ballxchange > 0:   #if ball direction is right
                 if xdiff == 1:
-                    ballychange = random.randint(-2,-1)
-                    ballxchange = -10
+                    atariBall.ballychange = random.randint(-2,-1)
+                    atariBall.ballxchange = -10
                 elif xdiff == 2:
-                    ballychange = -4
-                    ballxchange = -10
+                    atariBall.ballychange = -4
+                    atariBall.ballxchange = -10
                 elif xdiff == 3:
-                    ballychange = -5
-                    ballxchange = random.randint(-9,-8)
+                    atariBall.ballychange = -5
+                    atariBall.ballxchange = random.randint(-9,-8)
                 elif xdiff == 4:
-                    ballychange = -6
-                    ballxchange = random.randint(-9,-8)
+                    atariBall.ballychange = -6
+                    atariBall.ballxchange = random.randint(-9,-8)
                 elif xdiff == 5:
-                    ballychange = -7
-                    ballchange = random.randint(-8,-6)
+                    atariBall.ballychange = -7
+                    atariBall.ballchange = random.randint(-8,-6)
                 elif xdiff == 6:
-                    ballychange = -9
-                    ballxchange = random.randint(3,5)
+                    atariBall.ballychange = -9
+                    atariBall.ballxchange = random.randint(3,5)
                 elif xdiff == 7:
-                    ballychange = -7
-                    ballxchange = random.randint(6,8)
+                    atariBall.ballychange = -7
+                    atariBall.ballxchange = random.randint(6,8)
                 elif xdiff == 8:
-                    ballychange = -6
-                    ballxchange = random.randint(7,9)
+                    atariBall.ballychange = -6
+                    atariBall.ballxchange = random.randint(7,9)
                 else:
-                    ballychange = -4
-                    ballxchange = 9
+                    atariBall.ballychange = -4
+                    atariBall.ballxchange = 9
+
 
 
     #if ball has hit a block
-    if bally - 10 <= 365 and bally - 10 >= 350:
-        if window.get_at((ballx, bally - 10)) in levelColours[(level - 1)%len(levelColours)]:
-            if balldirection == "up":
-                score = ifblockhit(layer4, layer4cumulative, ballychange, score)
-            ballychange = -ballychange
+    if atariBall.bally - 10 <= 365 and atariBall.bally - 10 >= 350:
+        if window.get_at((atariBall.ballx, atariBall.bally - 10)) in levelColours[(level - 1)%len(levelColours)]:
+            if atariBall.balldirection == "up":
+                score = ifblockhit(theWall.layer4, theWall.layer4cumulative, atariBall.ballychange, score, theWall)
+            atariBall.ballychange = -atariBall.ballychange
             numberOfBlocksThatAreFalse += 1
-    elif bally - 10 <= 290 and bally - 10 >= 275:
-        if window.get_at((ballx, bally - 10)) in levelColours[(level - 1)%len(levelColours)] or window.get_at((ballx, bally + 10)) in levelColours[(level - 1)%len(levelColours)]:
-            if balldirection == "up":
-                score = ifblockhit(layer3, layer3cumulative, ballychange, score)
+            ballhitblockquestionmark = True
+    elif atariBall.bally - 10 <= 290 and atariBall.bally - 10 >= 275:
+        if window.get_at((atariBall.ballx, atariBall.bally - 10)) in levelColours[(level - 1)%len(levelColours)] or window.get_at((atariBall.ballx, atariBall.bally + 10)) in levelColours[(level - 1)%len(levelColours)]:
+            if atariBall.balldirection == "up":
+                score = ifblockhit(theWall.layer3, theWall.layer3cumulative, atariBall.ballychange, score, theWall)
             else:
-                score = ifblockhit(layer4, layer4cumulative, ballychange, score)
-            ballychange = -ballychange
+                score = ifblockhit(theWall.layer4, theWall.layer4cumulative, atariBall.ballychange, score, theWall)
+            atariBall.ballychange = -atariBall.ballychange
             numberOfBlocksThatAreFalse += 1
-    elif bally - 10 <= 220 and bally - 10 >= 205:
-        if window.get_at((ballx, bally - 10)) in levelColours[(level - 1)%len(levelColours)] or window.get_at((ballx, bally + 10)) in levelColours[(level - 1)%len(levelColours)]:
-            if balldirection == "up":
-                score = ifblockhit(layer2, layer2cumulative, ballychange, score)
+            ballhitblockquestionmark = True
+    elif atariBall.bally - 10 <= 220 and atariBall.bally - 10 >= 205:
+        if window.get_at((atariBall.ballx, atariBall.bally - 10)) in levelColours[(level - 1)%len(levelColours)] or window.get_at((atariBall.ballx, atariBall.bally + 10)) in levelColours[(level - 1)%len(levelColours)]:
+            if atariBall.balldirection == "up":
+                score = ifblockhit(theWall.layer2, theWall.layer2cumulative, atariBall.ballychange, score, theWall)
             else:
-                score = ifblockhit(layer3, layer3cumulative, ballychange, score)
-            ballychange = -ballychange
+                score = ifblockhit(theWall.layer3, theWall.layer3cumulative, atariBall.ballychange, score, theWall)
+            atariBall.ballychange = -atariBall.ballychange
             numberOfBlocksThatAreFalse += 1
-    elif bally - 10 <= 145 and bally - 10 >= 130:
-        if window.get_at((ballx, bally - 10)) in levelColours[(level - 1)%len(levelColours)] or window.get_at((ballx, bally + 10)) in levelColours[(level - 1)%len(levelColours)]:
-            if balldirection == "up":
-                score = ifblockhit(layer1, layer1cumulative, ballychange, score)
+            ballhitblockquestionmark = True
+    elif atariBall.bally - 10 <= 145 and atariBall.bally - 10 >= 130:
+        if window.get_at((atariBall.ballx, atariBall.bally - 10)) in levelColours[(level - 1)%len(levelColours)] or window.get_at((atariBall.ballx, atariBall.bally + 10)) in levelColours[(level - 1)%len(levelColours)]:
+            if atariBall.balldirection == "up":
+                score = ifblockhit(theWall.layer1, theWall.layer1cumulative, atariBall.ballychange, score, theWall)
             else:
-                score = ifblockhit(layer2, layer2cumulative, ballychange, score)
-            ballychange = -ballychange
+                score = ifblockhit(theWall.layer2, theWall.layer2cumulative, atariBall.ballychange, score, theWall)
+            atariBall.ballychange = -atariBall.ballychange
             numberOfBlocksThatAreFalse += 1
-    elif bally - 10 <= 70 and bally - 10 >= 55:
-        if window.get_at((ballx, bally + 10)) in levelColours[(level - 1)%len(levelColours)]:
-            if balldirection == "down":
-                score = ifblockhit(layer1, layer1cumulative, ballychange, score)
-            ballychange = -ballychange
+            ballhitblockquestionmark = True
+    elif atariBall.bally - 10 <= 70 and atariBall.bally - 10 >= 55:
+        if window.get_at((atariBall.ballx, atariBall.bally + 10)) in levelColours[(level - 1)%len(levelColours)]:
+            if atariBall.balldirection == "down":
+                score = ifblockhit(theWall.layer1, theWall.layer1cumulative, atariBall.ballychange, score, theWall)
+            atariBall.ballychange = -atariBall.ballychange
             numberOfBlocksThatAreFalse += 1
+            ballhitblockquestionmark = True
 
+    if ballhitblockquestionmark == False:
+        if atariBall.bally >= 295 and atariBall.bally <= 365:
+            for x in range(0, len(theWall.layer4cumulative)):
+                if theWall.layer4cumulative[x] - 5 <= atariBall.ballx <= theWall.layer4cumulative[x] + 5:
+                    if atariBall.ballxchange < 0:
+                        value, status = theWall.layer4[x]
+                        if status == True:
+                            theWall.layer4[x] = (value, False)
+                            atariBall.ballxchange = -atariBall.ballxchange
+                            score += bounces + 1
+                            bounces += 1
+                            numberOfBlocksThatAreFalse += 1
+                    else:
+                        value, status = theWall.layer4[x+1]
+                        if status == True:
+                            theWall.layer4[x+1] = (value, False)
+                            atariBall.ballxchange = -atariBall.ballxchange
+                            score += bounces + 1
+                            bounces += 1
+                            numberOfBlocksThatAreFalse += 1
 
-    if bally >= 295 and bally <= 365:
-        for x in range(0, len(layer4cumulative)):
-            if layer4cumulative[x] - 5 <= ballx <= layer4cumulative[x] + 5:
-                if ballxchange < 0:
-                    value, status = layer4[x]
-                    if status == True:
-                        layer4[x] = (value, False)
-                        ballxchange = -ballxchange
-                        score += bounces + 1
-                        bounces += 1
-                        numberOfBlocksThatAreFalse += 1
-                else:
-                    value, status = layer4[x+1]
-                    if status == True:
-                        layer4[x+1] = (value, False)
-                        ballxchange = -ballxchange
-                        score += bounces + 1
-                        bounces += 1
-                        numberOfBlocksThatAreFalse += 1
+        elif atariBall.bally >= 220 and atariBall.bally <= 290:
+            for x in range(0, len(theWall.layer3cumulative)):
+                if theWall.layer3cumulative[x] - 5 <= atariBall.ballx <= theWall.layer3cumulative[x] + 5:
+                    if atariBall.ballxchange < 0:
+                        value, status = theWall.layer3[x]
+                        if status == True:
+                            theWall.layer3[x] = (value, False)
+                            atariBall.ballxchange = -atariBall.ballxchange
+                            score += bounces + 2
+                            bounces += 1
+                            numberOfBlocksThatAreFalse += 1
+                    else:
+                        value, status = theWall.layer3[x+1]
+                        if status == True:
+                            theWall.layer3[x+1] = (value, False)
+                            atariBall.ballxchange = -atariBall.ballxchange
+                            score += bounces +2
+                            bounces += 1
+                            numberOfBlocksThatAreFalse += 1
 
-    elif bally >= 220 and bally <= 290:
-        for x in range(0, len(layer3cumulative)):
-            if layer3cumulative[x] - 5 <= ballx <= layer3cumulative[x] + 5:
-                if ballxchange < 0:
-                    value, status = layer3[x]
-                    if status == True:
-                        layer3[x] = (value, False)
-                        ballxchange = -ballxchange
-                        score += bounces + 2
-                        bounces += 1
-                        numberOfBlocksThatAreFalse += 1
-                else:
-                    value, status = layer3[x+1]
-                    if status == True:
-                        layer3[x+1] = (value, False)
-                        ballxchange = -ballxchange
-                        score += bounces +2
-                        bounces += 1
-                        numberOfBlocksThatAreFalse += 1
+        elif atariBall.bally >= 145 and atariBall.bally <= 215:
+            for x in range(0, len(theWall.layer2cumulative)):
+                if theWall.layer2cumulative[x] - 5 <= atariBall.ballx <= theWall.layer2cumulative[x] + 5:
+                    if atariBall.ballxchange < 0:
+                        value, status = theWall.layer2[x]
+                        if status == True:
+                            theWall.layer2[x] = (value, False)
+                            atariBall.ballxchange = -atariBall.ballxchange
+                            score += bounces + 3
+                            bounces += 1
+                            numberOfBlocksThatAreFalse += 1
+                    else:
+                        value, status = theWall.layer2[x+1]
+                        if status == True:
+                            theWall.layer2[x+1] = (value, False)
+                            atariBall.ballxchange = -atariBall.ballxchange
+                            score += bounces + 3
+                            bounces += 1
+                            numberOfBlocksThatAreFalse += 1
 
-    elif bally >= 145 and bally <= 215:
-        for x in range(0, len(layer2cumulative)):
-            if layer2cumulative[x] - 5 <= ballx <= layer2cumulative[x] + 5:
-                if ballxchange < 0:
-                    value, status = layer2[x]
-                    if status == True:
-                        layer2[x] = (value, False)
-                        ballxchange = -ballxchange
-                        score += bounces + 3
-                        bounces += 1
-                        numberOfBlocksThatAreFalse += 1
-                else:
-                    value, status = layer2[x+1]
-                    if status == True:
-                        layer2[x+1] = (value, False)
-                        ballxchange = -ballxchange
-                        score += bounces + 3
-                        bounces += 1
-                        numberOfBlocksThatAreFalse += 1
-
-    elif bally >= 70 and bally <= 140:
-        for x in range(0, len(layer1cumulative)):
-            if layer1cumulative[x] - 5 <= ballx <= layer1cumulative[x] + 5:
-                if ballxchange < 0:
-                    value, status = layer1[x]
-                    if status == True:
-                        layer1[x] = (value, False)
-                        ballxchange = -ballxchange
-                        score += bounces + 4
-                        bounces += 1
-                        numberOfBlocksThatAreFalse += 1
-                else:
-                    value, status = layer1[x+1]
-                    if status == True:
-                        layer1[x+1] = (value, False)
-                        ballxchange = -ballxchange
-                        score += bounces + 4
-                        bounces += 1
-                        numberOfBlocksThatAreFalse += 1
+        elif atariBall.bally >= 70 and atariBall.bally <= 140:
+            for x in range(0, len(theWall.layer1cumulative)):
+                if theWall.layer1cumulative[x] - 5 <= atariBall.ballx <= theWall.layer1cumulative[x] + 5:
+                    if atariBall.ballxchange < 0:
+                        value, status = theWall.layer1[x]
+                        if status == True:
+                            theWall.layer1[x] = (value, False)
+                            atariBall.ballxchange = -atariBall.ballxchange
+                            score += bounces + 4
+                            bounces += 1
+                            numberOfBlocksThatAreFalse += 1
+                    else:
+                        value, status = theWall.layer1[x+1]
+                        if status == True:
+                            theWall.layer1[x+1] = (value, False)
+                            atariBall.ballxchange = -atariBall.ballxchange
+                            score += bounces + 4
+                            bounces += 1
+                            numberOfBlocksThatAreFalse += 1
 
     #check if new level is required
-    if numberOfBlocksThatAreFalse == len(layer1) + len(layer2) + len(layer3) + len(layer4):
+    if numberOfBlocksThatAreFalse == len(theWall.layer1) + len(theWall.layer2) + len(theWall.layer3) + len(theWall.layer4):
         newLevel = True
         level += 1
 
@@ -485,7 +515,7 @@ while not game_over:
         message(str(lives), red, 880, 0)
     else:
         message(str(lives), white, 880, 0)
-    pygame.draw.circle(window, orange, (ballx, bally), 10)
+    pygame.draw.circle(window, orange, (atariBall.ballx, atariBall.bally), 10)
     pygame.draw.rect(window, yellow, [x1, y1, 200, 15])
     pygame.display.update()
     clock.tick(speed)
